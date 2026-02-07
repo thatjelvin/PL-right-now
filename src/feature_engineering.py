@@ -12,6 +12,10 @@ from .data_models import Team, LeagueTable
 class FeatureExtractor:
     """Extract features from Premier League team data for ML models."""
 
+    # Safety buffer constants for threshold calculations
+    TOP4_SAFETY_BUFFER = 2  # Extra points buffer for top 4 threshold estimation
+    RELEGATION_SAFETY_BUFFER = 3  # Extra points buffer for relegation safety estimation
+
     FEATURE_NAMES = [
         'current_position',
         'points',
@@ -92,7 +96,7 @@ class FeatureExtractor:
         fourth_place = league.teams[3]
         games_remaining = self.total_games - fourth_place.played
         projected = fourth_place.points + (fourth_place.points_per_game * games_remaining)
-        return int(projected) + 2  # Add buffer
+        return int(projected) + self.TOP4_SAFETY_BUFFER
 
     def _estimate_relegation_threshold(self, league: LeagueTable) -> int:
         """Estimate points needed to avoid relegation."""
@@ -101,7 +105,7 @@ class FeatureExtractor:
         eighteenth_place = league.teams[17]
         games_remaining = self.total_games - eighteenth_place.played
         projected = eighteenth_place.points + (eighteenth_place.points_per_game * games_remaining)
-        return int(projected) + 3  # Add safety buffer
+        return int(projected) + self.RELEGATION_SAFETY_BUFFER
 
     def extract_all_features(self, league: LeagueTable) -> Tuple[np.ndarray, List[str]]:
         """

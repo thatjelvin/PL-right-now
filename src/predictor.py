@@ -24,6 +24,11 @@ class SeasonPredictor:
     probabilities for various outcomes (title, top 4, relegation).
     """
 
+    # Model hyperparameters for points projection adjustments
+    FORM_ADJUSTMENT_COEFFICIENT = 0.3  # How much recent form affects projected PPG
+    FITNESS_BASELINE = 0.85  # Expected baseline squad fitness (85%)
+    FITNESS_ADJUSTMENT_COEFFICIENT = 0.1  # How much fitness affects projected PPG
+
     def __init__(self, total_games: int = 38):
         """
         Initialize the season predictor.
@@ -75,16 +80,13 @@ class SeasonPredictor:
             
             # Project final points with form adjustment
             base_ppg = team.points_per_game
-            form_adjustment = (team.recent_form_normalized - 0.5) * 0.3
-            fitness_adjustment = (team.squad_fitness_score / 100 - 0.85) * 0.1
+            form_adjustment = (team.recent_form_normalized - 0.5) * self.FORM_ADJUSTMENT_COEFFICIENT
+            fitness_adjustment = (team.squad_fitness_score / 100 - self.FITNESS_BASELINE) * self.FITNESS_ADJUSTMENT_COEFFICIENT
             
             adjusted_ppg = base_ppg + form_adjustment + fitness_adjustment
             adjusted_ppg = max(0, min(3, adjusted_ppg))  # Clamp to valid range
             
             projected_points = team.points + (adjusted_ppg * games_remaining)
-            
-            # Add some variance based on games remaining
-            variance = games_remaining * 0.15
             
             target_points.append(projected_points)
             target_positions.append(i + 1)  # Current position as base
